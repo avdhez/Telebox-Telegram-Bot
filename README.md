@@ -48,7 +48,7 @@ Before setting up this bot, ensure you have the following:
 
 ### INSTALLATION
 
-```git clone https://github.com/yourusername/telebox-telegram-bot.git
+```git clone https://github.com/avdhez/telebox-telegram-bot.git
 cd telebox-telegram-bot
 
 docker build -t telebox-bot 
