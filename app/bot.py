@@ -1,0 +1,96 @@
+import os
+import requests
+from telegram import Update, InputFile
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from .telebox import Telebox
+from .config import Config
+
+# Initialize Telebox client
+telebox = Telebox(Config.TELEBOX_API, Config.TELEBOX_BASEFOLDER)
+
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text('Hello! Send me a file to upload to Telebox or a Telebox link to download.')
+
+def handle_file(update: Update, context: CallbackContext):
+    file = update.message.document or update.message.video or update.message.photo[-1]
+    
+    # Download the file
+    file_id = file.file_id
+    new_file = context.bot.getFile(file_id)
+    file_path = new_file.download()
+
+    # Upload to Telebox
+    folder_id = Config.TELEBOX_BASEFOLDER
+    telebox.upload.upload_file(file_path, folder_id)
+
+    # Notify user
+    update.message.reply_text(f'File uploaded to Telebox successfully!')
+
+    # Clean up local file
+    os.remove(file_path)
+
+def handle_text(update: Update, context: CallbackContext):
+    text = update.message.text
+
+    if 'linkbox.to' in text:  # Check if the message contains a Telebox link
+        try:
+            download_and_send_telebox_file(update, context, text)
+        except Exception as e:
+            update.message.reply_text(f"Failed to download file: {str(e)}")
+    else:
+        update.message.reply_text('Please send a file or a valid Telebox link.')
+
+def download_and_send_telebox_file(update: Update, context: CallbackContext, link: str):
+    # Extract the file ID from the Telebox link
+    file_id = extract_file_id_from_link(link)
+
+    # Get file details from Telebox
+    file_details = telebox.folder.get_details(file_id)
+
+    if file_details['status'] != 1:
+        update.message.reply_text('Could not find the file on Telebox.')
+        return
+
+    file_url = file_details['data']['fileUrl']
+    file_name = file_details['data']['name']
+
+    # Download the file
+    response = requests.get(file_url, stream=True)
+    file_path = os.path.join('/tmp', file_name)
+
+    with open(file_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
+
+    # Send the file to the user
+    with open(file_path, 'rb') as f:
+        update.message.reply_document(document=InputFile(f), filename=file_name)
+
+    # Clean up local file
+    os.remove(file_path)
+
+def extract_file_id_from_link(link: str) -> str:
+    # Implement logic to extract file ID from the Telebox link
+    # Assuming the link format is something like: https://www.linkbox.to/file/{file_id}
+    return link.split('/')[-1]
+
+def main():
+    # Create the Updater and pass it your bot's token
+    updater = Updater(Config.TELEGRAM_API_TOKEN, use_context=True)
+
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+
+    # Register handlers
+    dp.add_handler(CommandHandler('start', start))
+    dp.add_handler(MessageHandler(Filters.document | Filters.video | Filters.photo, handle_file))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_text))
+
+    # Start the Bot
+    updater.start_polling()
+
+    # Run the bot until you press Ctrl-C or the process receives SIGINT, SIGTERM or SIGABRT
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
