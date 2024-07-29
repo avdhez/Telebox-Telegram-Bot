@@ -46,7 +46,7 @@ Before setting up this bot, ensure you have the following:
        USR_LIMIT_CONCURRENT = 5
 
 
-##INSTALLATION
+### INSTALLATION
 
 ```git clone https://github.com/yourusername/telebox-telegram-bot.git
 cd telebox-telegram-bot
