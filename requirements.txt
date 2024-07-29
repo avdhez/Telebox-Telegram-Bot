@@ -1,4 +1,4 @@
-python-telegram-bot==13.14
-requests==2.26.0
-tqdm==4.62.2
-requests-toolbelt==0.9.1
+python-telegram-bot
+requests
+tqdm
+requests-toolbelt
