@@ -15,10 +15,10 @@ from .config import Config
 # Initialize Telebox client
 telebox = Telebox(Config.TELEBOX_API, Config.TELEBOX_BASEFOLDER)
 
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text('Hello! Send me a file to upload to Telebox or a Telebox link to download.')
+async def start(update: Update, context: CallbackContext) -> None:
+    await update.message.reply_text('Hello! Send me a file to upload to Telebox or a Telebox link to download.')
 
-async def handle_file(update: Update, context: CallbackContext):
+async def handle_file(update: Update, context: CallbackContext) -> None:
     file = update.message.document or update.message.video or update.message.photo[-1]
 
     # Download the file
@@ -36,7 +36,7 @@ async def handle_file(update: Update, context: CallbackContext):
     # Clean up local file
     os.remove(file_path)
 
-async def handle_text(update: Update, context: CallbackContext):
+async def handle_text(update: Update, context: CallbackContext) -> None:
     text = update.message.text
 
     if 'linkbox.to' in text:  # Check if the message contains a Telebox link
@@ -47,7 +47,7 @@ async def handle_text(update: Update, context: CallbackContext):
     else:
         await update.message.reply_text('Please send a file or a valid Telebox link.')
 
-async def download_and_send_telebox_file(update: Update, context: CallbackContext, link: str):
+async def download_and_send_telebox_file(update: Update, context: CallbackContext, link: str) -> None:
     # Extract the file ID from the Telebox link
     file_id = extract_file_id_from_link(link)
 
@@ -71,7 +71,7 @@ async def download_and_send_telebox_file(update: Update, context: CallbackContex
 
     # Send the file to the user
     with open(file_path, 'rb') as f:
-        await update.message.reply_document(document=InputFile(f), filename=file_name)
+        await update.message.reply_document(document=InputFile(f, filename=file_name))
 
     # Clean up local file
     os.remove(file_path)
@@ -81,7 +81,7 @@ def extract_file_id_from_link(link: str) -> str:
     # Assuming the link format is something like: https://www.linkbox.to/file/{file_id}
     return link.split('/')[-1]
 
-def main():
+def main() -> None:
     # Create the Application and pass it your bot's token
     application = Application.builder().token(Config.TELEGRAM_API_TOKEN).build()
 
