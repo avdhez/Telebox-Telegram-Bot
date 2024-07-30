@@ -1,9 +1,10 @@
 import os
 import requests
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from tqdm import tqdm
 
-TOKEN = '7086505429:AAEXdqa_LA2shyxeW1jd6WKlJwMcJ-W6T6E'
-TELEBOX_API_KEY = '24lAbSDb9KbMTz8K'
+TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
+TELEBOX_API_KEY = 'YOUR_TELEBOX_API_KEY'
 
 def download_file(update, context):
     file_id = update.message.document.file_id
@@ -13,9 +14,14 @@ def download_file(update, context):
     # Download file to OS
     response = requests.get(file_url, stream=True)
     file_path = f'/app/{file_info.file_name}'
+    total_size = int(response.headers.get('content-length', 0))
+    block_size = 1024
+    t = tqdm(total=total_size, unit='B', unit_scale=True)
     with open(file_path, 'wb') as f:
-        for chunk in response.iter_content(1024):
+        for chunk in response.iter_content(block_size):
             f.write(chunk)
+            t.update(len(chunk))
+    t.close()
 
     # Upload file to Telebox
     upload_url = f'https://api.telebox.online/get_upload_url'
@@ -23,7 +29,14 @@ def download_file(update, context):
     upload_url = response.json()['upload_url']
 
     files = {'file': open(file_path, 'rb')}
-    response = requests.put(upload_url, files=files)
+    total_size = os.path.getsize(file_path)
+    block_size = 1024
+    t = tqdm(total=total_size, unit='B', unit_scale=True)
+    response = requests.put(upload_url, files=files, stream=True)
+    for chunk in response.iter_content(block_size):
+        t.update(len(chunk))
+    t.close()
+
     file_id = response.json()['file_id']
 
     # Share file on Telebox
