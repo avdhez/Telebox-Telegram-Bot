@@ -19,7 +19,14 @@ async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Hello! Send me a file to upload to Telebox or a Telebox link to download.')
 
 async def handle_file(update: Update, context: CallbackContext) -> None:
-    file = update.message.document or update.message.video or update.message.photo[-1]
+    if update.message.document:
+        file = update.message.document
+    elif update.message.video:
+        file = update.message.video
+    elif update.message.photo:
+        file = update.message.photo[-1]
+    else:
+        return  # Ignore if no valid file is found
 
     # Download the file
     file_id = file.file_id
@@ -87,7 +94,7 @@ def main() -> None:
 
     # Register handlers
     application.add_handler(CommandHandler('start', start))
-    application.add_handler(MessageHandler(filters.Document.ALL | filters.Video.ALL | filters.PHOTO, handle_file))
+    application.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO, handle_file))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
     # Start the Bot
