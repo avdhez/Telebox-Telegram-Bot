@@ -1,16 +1,20 @@
-from telegram.ext import Updater
-from bot.handlers import start, handle_file, handle_text
-from bot.config import TELEGRAM_BOT_TOKEN
+# main.py
+
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from bot.handlers import handle_text
 
 def main():
-    updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
-    dp = updater.dispatcher
+    # Replace 'YOUR_BOT_API_TOKEN' with your actual bot API token
+    updater = Updater("YOUR_BOT_API_TOKEN")
+    dispatcher = updater.dispatcher
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.document, handle_file))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_text))
+    # Add handlers for text messages
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_text))
 
+    # Start polling for updates
     updater.start_polling()
+
+    # Run the bot until you send a signal to stop
     updater.idle()
 
 if __name__ == '__main__':
