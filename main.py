@@ -1,6 +1,7 @@
 import os
 import requests
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler
+from telegram import Filters
 from tqdm import tqdm
 
 TOKEN = '7086505429:AAEXdqa_LA2shyxeW1jd6WKlJwMcJ-W6T6E'
